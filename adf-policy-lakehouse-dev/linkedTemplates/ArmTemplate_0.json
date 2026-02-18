@@ -1,0 +1,792 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-policy-lakehouse-dev"
+		},
+		"ls_adb_pol_lake_dev_mi_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0214-051314-4ekorfs2"
+		},
+		"ls_adls2_pol_lake_dev_mi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://stpolicylakevmdev.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adb_pol_lake_dev_mi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-7405612168084411.11.azuredatabricks.net",
+					"authentication": "MSI",
+					"workspaceResourceId": "/subscriptions/7af6aa74-f0fd-43ec-9d72-375169b9a473/resourceGroups/rg-policy-lakehouse-dev/providers/Microsoft.Databricks/workspaces/dbw-policy-lakehouse-dev-v1",
+					"existingClusterId": "[parameters('ls_adb_pol_lake_dev_mi_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls2_pol_lake_dev_mi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls2_pol_lake_dev_mi_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_landing_payments_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls2_pol_lake_dev_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls2_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_landing_policies_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls2_pol_lake_dev_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"runDate": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls2_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_landing_policyholders_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls2_pol_lake_dev_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls2_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_raw_payments_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls2_pol_lake_dev_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "payments/runDate=@{dataset().runDate}",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls2_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_raw_policies_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls2_pol_lake_dev_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "policies/runDate=@{dataset().runDate}",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls2_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_raw_policyholders_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls2_pol_lake_dev_mi",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "policyholders/runDate=@{dataset().runDate}",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls2_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_landing_to_raw')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CopyPolicies",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "policies/runDate=@{pipeline().parameters.runDate}",
+										"type": "Expression"
+									},
+									"wildcardFileName": "part-*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ""
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_landing_policies_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"runDate": {
+										"value": "@pipeline().parameters.runDate",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_raw_policies_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"runDate": {
+										"value": "@pipeline().parameters.runDate",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "CopyPolicyholders",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "CopyPolicies",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "policyholders/runDate=@{pipeline().parameters.runDate}",
+										"type": "Expression"
+									},
+									"wildcardFileName": "part-*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ""
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_landing_policyholders_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"runDate": {
+										"value": "@pipeline().parameters.runDate",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_raw_policyholders_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"runDate": {
+										"value": "@pipeline().parameters.runDate",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "CopyPayments",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "CopyPolicyholders",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "payments/runDate=@{pipeline().parameters.runDate}",
+										"type": "Expression"
+									},
+									"wildcardFileName": "part-*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ""
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_landing_payments_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"runDate": {
+										"value": "@pipeline().parameters.runDate",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_raw_payments_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"runDate": {
+										"value": "@pipeline().parameters.runDate",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-02-16T00:13:21Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_landing_policies_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_raw_policies_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_landing_policyholders_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_raw_policyholders_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_landing_payments_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_raw_payments_csv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_daily_policy_batch')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ep_landing_to_raw",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_landing_to_raw",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "nb_01_raw_to_bronze",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "ep_landing_to_raw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/policy_lakehouse_dev/01_raw_to_bronze",
+							"baseParameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_adb_pol_lake_dev_mi",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "nb_02_bronze_to_silver",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "nb_01_raw_to_bronze",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/policy_lakehouse_dev/02_bronze_to_silver_upsert",
+							"baseParameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_adb_pol_lake_dev_mi",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "nb_03_policyholders_scd2",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "nb_02_bronze_to_silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/policy_lakehouse_dev/03_policyholders_scd2",
+							"baseParameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_adb_pol_lake_dev_mi",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "nb_04_silver_to_gold",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "nb_03_policyholders_scd2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/policy_lakehouse_dev/04_silver_to_gold",
+							"baseParameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								},
+								"exportCsv": {
+									"value": "@pipeline().parameters.exportCsv",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_adb_pol_lake_dev_mi",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					},
+					"exportCsv": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-02-17T04:54:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_landing_to_raw')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_adb_pol_lake_dev_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_daily_policy_batch_02')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ep_landing_to_raw",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_landing_to_raw",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "dbx_job_policy_lakehouse_daily",
+						"type": "DatabricksJob",
+						"dependsOn": [
+							{
+								"activity": "ep_landing_to_raw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"jobId": "665768754366935",
+							"jobParameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								},
+								"exportCsv": {
+									"value": "@pipeline().parameters.exportCsv",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_adb_pol_lake_dev_mi",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					},
+					"exportCsv": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-02-17T04:54:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_landing_to_raw')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_adb_pol_lake_dev_mi')]"
+			]
+		}
+	]
+}
