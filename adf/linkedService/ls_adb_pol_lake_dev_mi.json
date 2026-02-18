@@ -1,0 +1,14 @@
+{
+	"name": "ls_adb_pol_lake_dev_mi",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-7405612168084411.11.azuredatabricks.net",
+			"authentication": "MSI",
+			"workspaceResourceId": "/subscriptions/7af6aa74-f0fd-43ec-9d72-375169b9a473/resourceGroups/rg-policy-lakehouse-dev/providers/Microsoft.Databricks/workspaces/dbw-policy-lakehouse-dev-v1",
+			"existingClusterId": "0214-051314-4ekorfs2"
+		}
+	}
+}

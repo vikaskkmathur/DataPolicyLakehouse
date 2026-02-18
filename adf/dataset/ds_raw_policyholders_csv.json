@@ -1,0 +1,32 @@
+{
+	"name": "ds_raw_policyholders_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls2_pol_lake_dev_mi",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"runDate": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "policyholders/runDate=@{dataset().runDate}",
+					"type": "Expression"
+				},
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

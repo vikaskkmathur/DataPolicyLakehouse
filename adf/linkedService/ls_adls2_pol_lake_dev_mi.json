@@ -1,0 +1,11 @@
+{
+	"name": "ls_adls2_pol_lake_dev_mi",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stpolicylakevmdev.dfs.core.windows.net/"
+		}
+	}
+}

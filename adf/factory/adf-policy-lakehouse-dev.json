@@ -1,0 +1,9 @@
+{
+	"name": "adf-policy-lakehouse-dev",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "a895536b-6696-4b6b-9ec7-3502cbc2580a",
+		"tenantId": "e825103c-93ab-4e80-96f6-8faabb0758da"
+	}
+}
