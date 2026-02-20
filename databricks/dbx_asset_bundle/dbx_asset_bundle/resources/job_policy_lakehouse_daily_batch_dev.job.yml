@@ -1,0 +1,56 @@
+resources:
+  jobs:
+    job_policy_lakehouse_daily_batch_dev:
+      name: job_policy_lakehouse_daily_batch_dev
+      tasks:
+        - task_key: raw_to_bronze
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/job_policy_lakehouse_daily_batch_dev/01_raw_to_bronze.ipynb
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: bronze_to_silver
+          depends_on:
+            - task_key: raw_to_bronze
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/job_policy_lakehouse_daily_batch_dev/02_bronze_to_silver_upsert.ipynb
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: policyholders_scd2
+          depends_on:
+            - task_key: bronze_to_silver
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/job_policy_lakehouse_daily_batch_dev/03_policyholders_scd2.ipynb
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: silver_to_gold
+          depends_on:
+            - task_key: policyholders_scd2
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/job_policy_lakehouse_daily_batch_dev/04_silver_to_gold.ipynb
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+      parameters:
+        - name: runDate
+          default: ""
+        - name: exportCsv
+          default: ""
+      description: job_policy_lakehouse_daily_batch_dev
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}
