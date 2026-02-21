@@ -556,6 +556,138 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_policy_lakehouse_orchestrator')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ep_run_policy_batch_02",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_daily_policy_batch_02",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"runDate": {
+									"value": "@pipeline().parameters.runDate",
+									"type": "Expression"
+								},
+								"exportCsv": {
+									"value": "@pipeline().parameters.exportCsv",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "wa_notify_success",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "ep_run_policy_batch_02",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": "https://prod-77.eastus.logic.azure.com:443/workflows/a72d70ae85c04d4abcf0a505fd18659f/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=6Mp54jxoPEeJ2VmlaqGfD-z94kf0aznYy22o2r5Z8_o",
+							"body": {
+								"status": "Success",
+								"environment": "dev",
+								"pipelineName": "@{pipeline().Pipeline}",
+								"runId": "@{pipeline().RunId}",
+								"triggerTimeUtc": "@{pipeline().TriggerTime}",
+								"runDate": "@{pipeline().parameters.runDate}",
+								"exportCsv": "@{pipeline().parameters.exportCsv}",
+								"activityName": "ep_run_policy_batch_02",
+								"errorCode": "",
+								"errorMessage": ""
+							}
+						}
+					},
+					{
+						"name": "wa_notify_failures",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "ep_run_policy_batch_02",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": "https://prod-77.eastus.logic.azure.com:443/workflows/a72d70ae85c04d4abcf0a505fd18659f/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun",
+							"body": {
+								"status": "Failure",
+								"environment": "dev",
+								"pipelineName": "@{pipeline().Pipeline}",
+								"runId": "@{pipeline().RunId}",
+								"triggerTimeUtc": "@{pipeline().TriggerTime}",
+								"runDate": "@{pipeline().parameters.runDate}",
+								"exportCsv": "@{pipeline().parameters.exportCsv}",
+								"activityName": "ep_run_policy_batch_02",
+								"errorCode": "@{string(activity('ep_run_policy_batch_02').error.code)}",
+								"errorMessage": "@{activity('ep_run_policy_batch_02').error.message}"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"runDate": {
+						"type": "string"
+					},
+					"exportCsv": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_daily_policy_batch_02')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_landing_payments_csv')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -787,95 +919,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_policy_lakehouse_orchestrator')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ep_run_policy_batch_02",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_daily_policy_batch_02",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"runDate": {
-									"value": "@pipeline().parameters.runDate",
-									"type": "Expression"
-								},
-								"exportCsv": {
-									"value": "@pipeline().parameters.exportCsv",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "wa_notify_success",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "ep_run_policy_batch_02",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "POST",
-							"headers": {
-								"Content-Type": "application/json"
-							},
-							"url": "https://prod-77.eastus.logic.azure.com:443/workflows/a72d70ae85c04d4abcf0a505fd18659f/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=6Mp54jxoPEeJ2VmlaqGfD-z94kf0aznYy22o2r5Z8_o",
-							"body": {
-								"status": "Success",
-								"environment": "dev",
-								"pipelineName": "@{pipeline().Pipeline}",
-								"runId": "@{pipeline().RunId}",
-								"triggerTimeUtc": "@{pipeline().TriggerTime}",
-								"runDate": "@{pipeline().parameters.runDate}",
-								"exportCsv": "@{pipeline().parameters.exportCsv}",
-								"activityName": "ep_run_policy_batch_02",
-								"errorCode": "",
-								"errorMessage": ""
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"runDate": {
-						"type": "string"
-					},
-					"exportCsv": {
-						"type": "string"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_daily_policy_batch_02')]"
-			]
 		}
 	]
 }
