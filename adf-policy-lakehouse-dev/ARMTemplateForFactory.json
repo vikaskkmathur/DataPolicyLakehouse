@@ -660,8 +660,8 @@
 								"runDate": "@{pipeline().parameters.runDate}",
 								"exportCsv": "@{pipeline().parameters.exportCsv}",
 								"activityName": "ep_run_policy_batch_02",
-								"errorCode": "@{string(activity('ep_run_policy_batch_02').error.code)}",
-								"errorMessage": "@{activity('ep_run_policy_batch_02').error.message}"
+								"errorCode": "@{string(activity('ep_run_policy_batch_02').error. errorCode)}",
+								"errorMessage": "@{activity('ep_run_policy_batch_02').error. message}"
 							},
 							"authentication": {
 								"type": "MSI",
