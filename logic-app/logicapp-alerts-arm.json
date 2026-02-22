@@ -1,0 +1,161 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_la_policy_lakehouse_alerts_dev_name": {
+            "defaultValue": "la-policy-lakehouse-alerts-dev",
+            "type": "String"
+        },
+        "connections_azureblob_1_externalid": {
+            "defaultValue": "/subscriptions/7af6aa74-f0fd-43ec-9d72-375169b9a473/resourceGroups/rg-policy-lakehouse-dev/providers/Microsoft.Web/connections/azureblob-1",
+            "type": "String"
+        },
+        "connections_office365_externalid": {
+            "defaultValue": "/subscriptions/7af6aa74-f0fd-43ec-9d72-375169b9a473/resourceGroups/rg-policy-lakehouse-dev/providers/Microsoft.Web/connections/office365",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_la_policy_lakehouse_alerts_dev_name')]",
+            "location": "eastus",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_an_HTTP_request_is_received": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "environment": {
+                                            "type": "string"
+                                        },
+                                        "pipelineName": {
+                                            "type": "string"
+                                        },
+                                        "runId": {
+                                            "type": "string"
+                                        },
+                                        "triggerTimeUtc": {
+                                            "type": "string"
+                                        },
+                                        "runDate": {
+                                            "type": "string"
+                                        },
+                                        "exportCsv": {
+                                            "type": "string"
+                                        },
+                                        "activityName": {
+                                            "type": "string"
+                                        },
+                                        "errorCode": {
+                                            "type": "string"
+                                        },
+                                        "errorMessage": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Create_blob_(V2)": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "body": "@string(triggerBody())",
+                                "headers": {
+                                    "ReadFileMetadataFromServer": true
+                                },
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stpolicylakevmdev'))}/files",
+                                "queries": {
+                                    "folderPath": "/logs",
+                                    "name": "adf-alerts/@{triggerBody()?['pipelineName']}/@{triggerBody()?['runDate']}/@{triggerBody()?['runId']}.json",
+                                    "queryParametersSingleEncoded": true
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                }
+                            }
+                        },
+                        "Send_an_email_(V2)": {
+                            "runAfter": {
+                                "Create_blob_(V2)": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['office365']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "body": {
+                                    "To": "vikaskkmathur@gmail.com",
+                                    "Subject": "Policy Lakehouse @{triggerBody()?['status']} | @{triggerBody()?['environment']} | @{triggerBody()?['runDate']}",
+                                    "Body": "<p><b>Status:</b> @{triggerBody()?['status']}</p> <br><p><b>Environment:</b> @{triggerBody()?['environment']}</p> <br><p><b>Pipeline:</b> @{triggerBody()?['pipelineName']}</p> <br><p><b>RunId:</b> @{triggerBody()?['runId']}</p> <br><p><b>runDate:</b> @{triggerBody()?['runDate']}</p> <br><p><b>exportCsv:</b> @{triggerBody()?['exportCsv']}</p> <br><p><b>Activity:</b> @{triggerBody()?['activityName']}</p> <br><p><b>ErrorCode:</b> @{triggerBody()?['errorCode']}</p> <br><p><b>ErrorMessage:</b> @{triggerBody()?['errorMessage']}</p>",
+                                    "Importance": "Normal"
+                                },
+                                "path": "/v2/Mail"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "id": "/subscriptions/7af6aa74-f0fd-43ec-9d72-375169b9a473/providers/Microsoft.Web/locations/eastus/managedApis/azureblob",
+                                "connectionId": "[parameters('connections_azureblob_1_externalid')]",
+                                "connectionName": "azureblob-1",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            },
+                            "office365": {
+                                "id": "/subscriptions/7af6aa74-f0fd-43ec-9d72-375169b9a473/providers/Microsoft.Web/locations/eastus/managedApis/office365",
+                                "connectionId": "[parameters('connections_office365_externalid')]",
+                                "connectionName": "office365",
+                                "connectionProperties": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
